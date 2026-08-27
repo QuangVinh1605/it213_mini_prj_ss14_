@@ -1,5 +1,7 @@
 package com.example.mini_project_ss14.rag.service;
 
+import com.example.mini_project_ss14.llmops.domain.LlmOpsTraceContext;
+import com.example.mini_project_ss14.llmops.service.LlmOpsService;
 import com.example.mini_project_ss14.rag.config.RagProperties;
 import com.example.mini_project_ss14.rag.dto.RagResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +17,7 @@ import org.springframework.ai.vectorstore.VectorStore;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -37,6 +40,9 @@ class RagServiceTest {
     @Mock
     private VectorStore vectorStore;
 
+    @Mock
+    private LlmOpsService llmOpsService;
+
     private RagProperties ragProperties;
     private RagService ragService;
 
@@ -45,7 +51,12 @@ class RagServiceTest {
         ragProperties = new RagProperties();
         ragProperties.getSimilarity().setThreshold(0.7);
         ragProperties.getSimilarity().setTopK(5);
-        ragService = new RagService(ragChatClient, vectorStore, ragProperties);
+        lenient().when(llmOpsService.traceGeneration(any(LlmOpsTraceContext.class), any()))
+                .thenAnswer(invocation -> {
+                    Supplier<String> supplier = invocation.getArgument(1);
+                    return supplier.get();
+                });
+        ragService = new RagService(ragChatClient, vectorStore, ragProperties, llmOpsService);
     }
 
     @Test

@@ -52,6 +52,12 @@ Mở file `.env` và điền các giá trị:
 | `DATABASE_PORT` | Port database (mặc định: 5432) | Tùy chọn |
 | `OPENAI_CHAT_MODEL` | Model LLM (mặc định: gpt-4o-mini) | Tùy chọn |
 | `OPENAI_EMBEDDING_MODEL` | Model Embedding (mặc định: text-embedding-3-small) | Tùy chọn |
+| `LLMOPS_ENABLED` | Bật/tắt phân hệ LLMOps | Tùy chọn |
+| `LLMOPS_CAPTURE_PAYLOADS` | Ghi prompt/completion vào trace Langfuse | Tùy chọn |
+| `LLMOPS_GUARD_MAX_CALLS_PER_WINDOW` | Số lần gọi LLM tối đa trong một cửa sổ guard | Tùy chọn |
+| `LLMOPS_GUARD_WINDOW_SECONDS` | Độ dài cửa sổ chống loop | Tùy chọn |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | Langfuse OTLP endpoint | Tùy chọn |
+| `OTEL_EXPORTER_OTLP_HEADERS` | Basic Auth + ingestion header cho Langfuse | Tùy chọn |
 | `RAG_CHUNK_SIZE` | Chunk size (mặc định: 500) | Tùy chọn |
 | `RAG_CHUNK_OVERLAP_PERCENT` | Overlap % (mặc định: 10) | Tùy chọn |
 | `RAG_SIMILARITY_THRESHOLD` | Similarity threshold (mặc định: 0.7) | Tùy chọn |
@@ -178,6 +184,46 @@ Thay đổi biến môi trường để thử nghiệm:
 | GET | `/api/v1/rag/ask?question=...` | Tra cứu quy chế RAG |
 | POST | `/api/v1/rag/ingest` | Nạp tất cả tài liệu từ thư mục documents |
 | POST | `/api/v1/rag/ingest/upload` | Upload và nạp file tài liệu |
+| GET | `/api/v1/llmops/status` | Xem trạng thái cấu hình LLMOps/Langfuse/guard |
+| GET | `/api/v1/llmops/metrics` | Xem latency, token, cost estimate theo domain/operation |
+| DELETE | `/api/v1/llmops/guard` | Reset cửa sổ infinite loop guard |
+
+---
+
+## LLMOps Pipeline
+
+```
+RAG / Agent request
+    ↓
+LlmOpsService.traceGeneration(...)
+    ↓
+Infinite Loop Guard (domain + session window)
+    ↓
+OpenTelemetry span type=generation
+    ↓
+Langfuse OTLP exporter
+    ↓
+Latency + Token Estimate + Cost Estimate + Error status
+    ↓
+In-memory metrics API
+```
+
+### Cấu hình Langfuse
+
+```bash
+# Tạo Basic Auth từ Langfuse public key + secret key
+export AUTH_STRING=$(echo -n "pk-lf-...:sk-lf-..." | base64)
+
+export OTEL_EXPORTER_OTLP_ENDPOINT="https://cloud.langfuse.com/api/public/otel"
+export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Basic ${AUTH_STRING},x-langfuse-ingestion-version=4"
+```
+
+Gọi thử API rồi xem metrics nội bộ:
+
+```bash
+curl "http://localhost:8080/api/v1/llmops/status"
+curl "http://localhost:8080/api/v1/llmops/metrics"
+```
 
 ---
 
@@ -207,6 +253,21 @@ Lưu trữ vector embeddings cho RAG. Embedding dimension: `vector(1536)`.
 ```
 src/main/java/com/example/mini_project_ss14/
 ├── MiniProjectSs14Application.java          # Main Application
+├── llmops/                                  # Module 4: LLMOps
+│   ├── config/
+│   │   └── LlmOpsProperties.java            # Cấu hình Langfuse/guard/token/cost
+│   ├── controller/
+│   │   └── LlmOpsController.java            # REST API status/metrics/guard
+│   ├── domain/
+│   │   ├── LlmOpsDomain.java                # Domain RAG/AGENT/MCP
+│   │   ├── LlmOpsTraceContext.java          # Context trace/span
+│   │   └── LlmOpsUsage.java                 # Token/cost estimate
+│   ├── dto/
+│   │   └── LlmOpsMetricResponse.java        # Metrics response
+│   └── service/
+│       ├── InfiniteLoopGuard.java           # Chống lặp theo domain/session
+│       ├── LlmOpsMetricsService.java        # Tổng hợp metrics nội bộ
+│       └── LlmOpsService.java               # Wrapper trace Langfuse
 └── rag/                                      # Module 1: RAG
     ├── config/
     │   ├── RagProperties.java               # Cấu hình chunking/similarity

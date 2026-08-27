@@ -22,6 +22,7 @@ repositories {
 dependencyManagement {
     imports {
         mavenBom "org.springframework.ai:spring-ai-bom:1.0.0"
+        mavenBom "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom:2.28.1"
     }
 }
 
@@ -30,9 +31,15 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
     // === Spring AI - OpenAI (Chat + Embedding) ===
     implementation 'org.springframework.ai:spring-ai-starter-model-openai'
+
+    // === LLMOps - OpenTelemetry export for Langfuse ===
+    implementation 'io.opentelemetry.instrumentation:opentelemetry-spring-boot-starter'
+    implementation 'io.micrometer:micrometer-tracing-bridge-otel'
+    implementation 'io.opentelemetry:opentelemetry-exporter-otlp'
 
     // === Spring AI - PgVector Store ===
     implementation 'org.springframework.ai:spring-ai-starter-vector-store-pgvector'
@@ -52,6 +59,7 @@ dependencies {
 
     // === Test ===
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'com.h2database:h2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
