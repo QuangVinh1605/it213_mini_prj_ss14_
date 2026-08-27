@@ -23,7 +23,8 @@ public class AgentController {
         }
         
         try {
-            String response = agentService.processChat(request.getMessage());
+            // Truyền conversationId để Bot có thể nhớ ngữ cảnh của từng khách hàng
+            String response = agentService.processChat(request.getConversationId(), request.getMessage());
             return ResponseEntity.ok(new ChatResponse(response));
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(new ChatResponse("Hệ thống đang bận hoặc có lỗi xảy ra, vui lòng thử lại sau. Lỗi: " + e.getMessage()));

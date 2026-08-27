@@ -1,9 +1,11 @@
-package com.example.mini_project_ss14.agent.tools;
+package com.example.mini_project_ss14.agent.config;
 
 import com.example.mini_project_ss14.agent.entity.Delivery;
 import com.example.mini_project_ss14.agent.entity.Incident;
 import com.example.mini_project_ss14.agent.repository.DeliveryRepository;
 import com.example.mini_project_ss14.agent.repository.IncidentRepository;
+import com.example.mini_project_ss14.agent.tools.CreateIncidentRequest;
+import com.example.mini_project_ss14.agent.tools.UpdateDeliveryStatusRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Description;
