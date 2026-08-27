@@ -1,0 +1,23 @@
+spring:
+  main:
+    web-application-type: none
+    banner-mode: off
+  ai:
+    mcp:
+      server:
+        enabled: false   # this process is client-only
+      client:
+        enabled: true
+        name: smarthub-mcp-client
+        version: 0.0.1
+        type: SYNC
+        toolcallback:
+          enabled: true   # required — off by default in some Spring AI versions
+        stdio:
+          connections:
+            smarthub-server:
+              command: java
+              args:
+                - -jar
+                - build/libs/mini_project_ss14-0.0.1-SNAPSHOT.jar
+                - --spring.profiles.active=mcp-server

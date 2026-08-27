@@ -22,7 +22,6 @@ public class MarkdownReportService {
 
         markdown.append("## Query Result\n\n");
 
-        // Header
         markdown.append("| ");
 
         for (String column : columns) {
@@ -31,7 +30,6 @@ public class MarkdownReportService {
 
         markdown.append("\n");
 
-        // Separator
         markdown.append("| ");
 
         for (String ignored : columns) {
@@ -40,7 +38,6 @@ public class MarkdownReportService {
 
         markdown.append("\n");
 
-        // Data
         for (Map<String, Object> row : rows) {
 
             markdown.append("| ");
@@ -74,8 +71,6 @@ public class MarkdownReportService {
 
         String text = value.toString();
 
-        // Prevent a value containing "|" from breaking
-        // the Markdown table.
         return text.replace("|", "\\|")
                 .replace("\n", " ");
     }

@@ -20,13 +20,13 @@
         </encoder>
     </appender>
 
-    <springProfile name="stdio">
+    <springProfile name="mcp-server | mcp-client-test">
         <root level="INFO">
             <appender-ref ref="FILE"/>
         </root>
     </springProfile>
 
-    <springProfile name="!stdio">
+    <springProfile name="!mcp-server &amp; !mcp-client-test">
         <root level="INFO">
             <appender-ref ref="CONSOLE"/>
         </root>

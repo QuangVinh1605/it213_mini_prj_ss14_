@@ -1,0 +1,14 @@
+spring:
+  main:
+    web-application-type: none
+    banner-mode: off
+  ai:
+    mcp:
+      server:
+        enabled: true
+        name: smarthub-mcp-server
+        version: 0.0.1
+        type: SYNC
+        stdio: true
+      client:
+        enabled: false   # this process is server-only

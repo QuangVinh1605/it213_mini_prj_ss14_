@@ -1,14 +1,12 @@
 package com.example.mini_project_ss14.mcp.validator;
 
 import org.springframework.stereotype.Component;
-
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Component
 public class SafeSqlValidator {
-
     private static final Set<String> ALLOWED_TABLES = Set.of(
             "deliveries",
             "incidents"
@@ -25,6 +23,11 @@ public class SafeSqlValidator {
                     + "EXECUTE|VACUUM|ANALYZE|REFRESH|REINDEX|"
                     + "COMMENT)\\b",
             Pattern.CASE_INSENSITIVE
+    );
+
+    private static final Pattern FROM_CLAUSE = Pattern.compile(
+            "\\bFROM\\s+(.+?)(?=\\bWHERE\\b|\\bGROUP\\s+BY\\b|\\bORDER\\s+BY\\b|\\bLIMIT\\b|$)",
+            Pattern.CASE_INSENSITIVE | Pattern.DOTALL
     );
 
     /**
@@ -44,19 +47,17 @@ public class SafeSqlValidator {
         validateSingleStatement(normalized);
         validateSelectOnly(normalized);
         validateForbiddenKeywords(normalized);
+        validateNoCommaJoins(normalized);
         validateTables(normalized);
     }
 
     private String normalize(String sql) {
         String normalized = sql.trim();
 
-        // Remove SQL comments.
         normalized = normalized
                 .replaceAll("(?s)/\\*.*?\\*/", " ")
                 .replaceAll("(?m)--[^\\r\\n]*", " ");
 
-        // Dollar-quoted PostgreSQL strings are rejected because
-        // they can contain arbitrary SQL/function bodies.
         if (normalized.contains("$$")) {
             throw new IllegalArgumentException(
                     "Dollar-quoted SQL is not allowed"
@@ -67,7 +68,6 @@ public class SafeSqlValidator {
     }
 
     private void validateSingleStatement(String sql) {
-        // Multiple statements are not allowed.
         if (sql.contains(";")) {
             throw new IllegalArgumentException(
                     "Multiple SQL statements are not allowed"
@@ -84,10 +84,6 @@ public class SafeSqlValidator {
     }
 
     private void validateForbiddenKeywords(String sql) {
-        // Remove normal string literals before checking keywords.
-        // Example:
-        // WHERE status = 'DELETE'
-        // should not be rejected just because DELETE appears as data.
         String withoutStrings = sql.replaceAll(
                 "'(?:''|[^'])*'",
                 " "
@@ -99,6 +95,22 @@ public class SafeSqlValidator {
             throw new IllegalArgumentException(
                     "Forbidden SQL operation: " + matcher.group()
             );
+        }
+    }
+
+    private void validateNoCommaJoins(String sql) {
+        Matcher matcher = FROM_CLAUSE.matcher(sql);
+
+        if (matcher.find()) {
+            String fromClause = matcher.group(1);
+
+            String beforeFirstJoin = fromClause.split("(?i)\\bJOIN\\b")[0];
+
+            if (beforeFirstJoin.contains(",")) {
+                throw new IllegalArgumentException(
+                        "Comma-style joins are not allowed; use explicit JOIN"
+                );
+            }
         }
     }
 
