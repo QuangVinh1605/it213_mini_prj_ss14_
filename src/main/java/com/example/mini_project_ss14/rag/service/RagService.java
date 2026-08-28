@@ -1,8 +1,5 @@
 package com.example.mini_project_ss14.rag.service;
 
-import com.example.mini_project_ss14.llmops.domain.LlmOpsDomain;
-import com.example.mini_project_ss14.llmops.domain.LlmOpsTraceContext;
-import com.example.mini_project_ss14.llmops.service.LlmOpsService;
 import com.example.mini_project_ss14.rag.config.RagProperties;
 import com.example.mini_project_ss14.rag.dto.RagResponse;
 import com.example.mini_project_ss14.rag.dto.RagResponse.SourceDocument;
@@ -31,17 +28,14 @@ public class RagService {
     private final ChatClient ragChatClient;
     private final VectorStore vectorStore;
     private final RagProperties ragProperties;
-    private final LlmOpsService llmOpsService;
 
     public RagService(
             @Qualifier("ragChatClient") ChatClient ragChatClient,
             VectorStore vectorStore,
-            RagProperties ragProperties,
-            LlmOpsService llmOpsService) {
+            RagProperties ragProperties) {
         this.ragChatClient = ragChatClient;
         this.vectorStore = vectorStore;
         this.ragProperties = ragProperties;
-        this.llmOpsService = llmOpsService;
     }
 
     /**
@@ -59,21 +53,10 @@ public class RagService {
             //   - Tìm kiếm tương đồng trong VectorStore
             //   - Inject context vào prompt
             //   - Gọi LLM sinh câu trả lời
-            String answer = llmOpsService.traceGeneration(
-                    new LlmOpsTraceContext(
-                            LlmOpsDomain.RAG,
-                            "rag.ask",
-                            "smarthub-rag",
-                            "rag-answer-generation",
-                            "rag-query",
-                            "anonymous",
-                            question
-                    ),
-                    () -> ragChatClient.prompt()
-                            .user(question)
-                            .call()
-                            .content()
-            );
+            String answer = ragChatClient.prompt()
+                    .user(question)
+                    .call()
+                    .content();
 
             // 2. Truy vấn riêng để lấy sourceDocuments cho citation
             List<SourceDocument> sources = retrieveSources(question);
