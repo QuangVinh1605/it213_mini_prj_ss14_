@@ -16,6 +16,7 @@ public class MarkdownReportService {
 
         List<String> columns = rows.get(0).keySet()
                 .stream()
+                .sorted()
                 .toList();
 
         StringBuilder markdown = new StringBuilder();

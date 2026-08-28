@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -55,12 +56,11 @@ class MarkdownReportServiceTest {
     @Test
     void shouldHandleNullValues() {
 
-        List<Map<String, Object>> rows = List.of(
-                Map.of(
-                        "status", "DAMAGED",
-                        "description", (Object) null
-                )
-        );
+        Map<String, Object> row = new LinkedHashMap<>();
+        row.put("status", "DAMAGED");
+        row.put("description", null);
+
+        List<Map<String, Object>> rows = List.of(row);
 
         String result = service.format(rows);
 
