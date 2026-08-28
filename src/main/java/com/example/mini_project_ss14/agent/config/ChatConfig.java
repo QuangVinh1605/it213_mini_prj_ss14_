@@ -34,7 +34,7 @@ public class ChatConfig {
                         Chỉ trả lời những gì liên quan đến sự cố vận chuyển và logistics.
                         """)
                 .defaultOptions(
-                        OpenAiChatOptions.builder().withTemperature(0.2).build()
+                        OpenAiChatOptions.builder().temperature(0.2).build()
                 )
                 .defaultAdvisors(
                         MessageChatMemoryAdvisor.builder(chatMemory()).build()
